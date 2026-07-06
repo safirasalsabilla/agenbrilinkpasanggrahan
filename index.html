@@ -108,12 +108,13 @@
     display:grid; grid-template-columns: repeat(6, 1fr); gap:12px 14px;
   }
   form#txForm .field-tanggal{grid-column:span 2;}
+  form#txForm .field-waktu{grid-column:span 2;}
   form#txForm .field-nasabah{grid-column:span 2;}
   form#txForm .field-jenis{grid-column:span 2;}
   form#txForm .field-nominal{grid-column:span 2;}
   form#txForm .field-fee{grid-column:span 2;}
   form#txForm .field-admin{grid-column:span 2;}
-  form#txForm .field-ket{grid-column:span 6;}
+  form#txForm .field-ket{grid-column:span 4;}
   form#txForm .field-actions{grid-column:span 6; display:flex; gap:10px; justify-content:flex-end; border-top:1px dashed var(--line); padding-top:14px; margin-top:2px;}
 
   label{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-bottom:5px; font-weight:600; }
@@ -174,7 +175,7 @@
 
   @media (max-width: 880px){
     form#txForm{ grid-template-columns:repeat(2,1fr); }
-    form#txForm .field-tanggal, form#txForm .field-nasabah, form#txForm .field-jenis,
+    form#txForm .field-tanggal, form#txForm .field-waktu, form#txForm .field-nasabah, form#txForm .field-jenis,
     form#txForm .field-nominal, form#txForm .field-fee, form#txForm .field-admin, form#txForm .field-ket{ grid-column:span 2; }
     form#txForm .field-actions{ grid-column:span 2; }
     .masthead-inner{ align-items:flex-start; }
@@ -192,8 +193,8 @@
   <div class="masthead-inner">
     <div>
       <div class="brand-eyebrow">Buku Kas Digital</div>
-      <h1 class="brand">Agen BRILink Pasanggrahan
-        <small>Pencatatan transaksi harian — setor, tarik, transfer, pembayaran & transaksi lainnya</small>
+      <h1 class="brand">Agen BRILink
+        <small>Pencatatan transaksi harian — setor, tarik, transfer & pembayaran</small>
       </h1>
     </div>
     <div class="datebox">
@@ -261,6 +262,10 @@
         <div class="field-tanggal">
           <label for="fTanggal">Tanggal</label>
           <input type="date" id="fTanggal" required>
+        </div>
+        <div class="field-waktu">
+          <label for="fWaktu">Waktu</label>
+          <input type="time" id="fWaktu" required>
         </div>
         <div class="field-nasabah">
           <label for="fNasabah">Nama Nasabah</label>
@@ -339,6 +344,7 @@
           <thead>
             <tr>
               <th>Tanggal</th>
+              <th>Waktu</th>
               <th>Nasabah</th>
               <th>Jenis</th>
               <th>Keterangan</th>
@@ -357,9 +363,9 @@
         <div>Belum ada transaksi yang cocok. Catat transaksi baru di atas.</div>
       </div>
       <div class="note-box">
-        Kolom "Saldo" adalah saldo berjalan agen dihitung berurutan berdasarkan tanggal transaksi (bukan
-        urutan tampilan), dimulai dari Saldo Awal di panel 00. Mengubah Saldo Awal atau mengedit transaksi
-        lama akan menghitung ulang seluruh saldo berjalan secara otomatis.
+        Kolom "Saldo" adalah saldo berjalan agen dihitung berurutan berdasarkan tanggal dan waktu transaksi
+        (bukan urutan tampilan), dimulai dari Saldo Awal di panel 00. Mengubah Saldo Awal atau mengedit
+        transaksi lama akan menghitung ulang seluruh saldo berjalan secara otomatis.
       </div>
     </div>
   </section>
@@ -396,10 +402,17 @@
     'Pembayaran':'jenis-bayar', 'Pulsa/Token':'jenis-pulsa', 'Lainnya':'jenis-lain'
   };
 
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function currentTimeHHMM(){
+    const d = new Date();
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
   const todayLabel = document.getElementById('todayLabel');
   const today = new Date();
   todayLabel.textContent = today.toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
   document.getElementById('fTanggal').valueAsDate = today;
+  document.getElementById('fWaktu').value = currentTimeHHMM();
 
   const form = document.getElementById('txForm');
   const tbody = document.getElementById('txTableBody');
@@ -409,10 +422,14 @@
   function uid(){ return 't' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
   // Menghitung saldo berjalan untuk SELURUH transaksi (bukan hasil filter),
-  // diurutkan berdasarkan tanggal lalu waktu input, agar saldo konsisten
-  // walau tabel ditampilkan dalam urutan lain atau sedang difilter.
+  // diurutkan berdasarkan tanggal, lalu waktu, lalu waktu input, agar saldo
+  // konsisten walau tabel ditampilkan dalam urutan lain atau sedang difilter.
   function computeBalances(){
-    const sorted = [...transactions].sort((a,b) => a.tanggal.localeCompare(b.tanggal) || a.createdAt - b.createdAt);
+    const sorted = [...transactions].sort((a,b) =>
+      a.tanggal.localeCompare(b.tanggal) ||
+      (a.waktu||'').localeCompare(b.waktu||'') ||
+      a.createdAt - b.createdAt
+    );
     let saldo = Number(saldoAwal||0);
     const map = {};
     for(const t of sorted){
@@ -439,15 +456,11 @@
       if(dari && t.tanggal < dari) return false;
       if(sampai && t.tanggal > sampai) return false;
       return true;
-    }).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.createdAt - a.createdAt);
-  }
-
-  function totalFeeBulanIni(){
-    const now = new Date();
-    const ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-    return transactions
-      .filter(t => t.tanggal && t.tanggal.startsWith(ym))
-      .reduce((s,t) => s + Number(t.fee||0), 0);
+    }).sort((a,b) =>
+      b.tanggal.localeCompare(a.tanggal) ||
+      (b.waktu||'').localeCompare(a.waktu||'') ||
+      b.createdAt - a.createdAt
+    );
   }
 
   function render(){
@@ -462,6 +475,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="tabnum">${fmtTanggal(t.tanggal)}</td>
+          <td class="tabnum">${escapeHtml(t.waktu||'—')}</td>
           <td>${escapeHtml(t.nasabah)}</td>
           <td><span class="jenis-pill ${jenisClass[t.jenis]||'jenis-lain'}">${escapeHtml(t.jenis)}</span></td>
           <td>${escapeHtml(t.keterangan||'—')}</td>
@@ -512,6 +526,7 @@
     e.preventDefault();
     const data = {
       tanggal: document.getElementById('fTanggal').value,
+      waktu: document.getElementById('fWaktu').value,
       nasabah: document.getElementById('fNasabah').value.trim(),
       jenis: document.getElementById('fJenis').value,
       nominal: Number(document.getElementById('fNominal').value || 0),
@@ -531,12 +546,14 @@
     }
     form.reset();
     document.getElementById('fTanggal').valueAsDate = new Date();
+    document.getElementById('fWaktu').value = currentTimeHHMM();
     render();
   });
 
   document.getElementById('resetFormBtn').addEventListener('click', function(){
     form.reset();
     document.getElementById('fTanggal').valueAsDate = new Date();
+    document.getElementById('fWaktu').value = currentTimeHHMM();
     editingId = null;
     submitBtn.textContent = 'Simpan Transaksi';
   });
@@ -548,6 +565,7 @@
       const t = transactions.find(x => x.id === editId);
       if(!t) return;
       document.getElementById('fTanggal').value = t.tanggal;
+      document.getElementById('fWaktu').value = t.waktu || currentTimeHHMM();
       document.getElementById('fNasabah').value = t.nasabah;
       document.getElementById('fJenis').value = t.jenis;
       document.getElementById('fNominal').value = t.nominal;
@@ -582,8 +600,8 @@
     const list = getFiltered();
     if(list.length === 0){ alert('Tidak ada data untuk diekspor.'); return; }
     const { map: saldoMap } = computeBalances();
-    const header = ['Tanggal','Nasabah','Jenis','Keterangan','Nominal','Admin','Fee','Saldo'];
-    const rows = list.map(t => [t.tanggal, t.nasabah, t.jenis, (t.keterangan||''), t.nominal, (t.admin||0), t.fee, saldoMap[t.id]]);
+    const header = ['Tanggal','Waktu','Nasabah','Jenis','Keterangan','Nominal','Admin','Fee','Saldo'];
+    const rows = list.map(t => [t.tanggal, (t.waktu||''), t.nasabah, t.jenis, (t.keterangan||''), t.nominal, (t.admin||0), t.fee, saldoMap[t.id]]);
     const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, `transaksi-brilink-${new Date().toISOString().slice(0,10)}.csv`);
@@ -605,13 +623,13 @@
     reader.onload = function(ev){
       try{
         const data = JSON.parse(ev.target.result);
-        // Kompatibel dengan cadangan lama (array transaksi tanpa saldoAwal)
+        // Kompatibel dengan cadangan lama (array transaksi tanpa saldoAwal/waktu)
         // maupun format baru { saldoAwal, transactions }.
         if(Array.isArray(data)){
-          transactions = data.map(t => ({ admin: 0, ...t }));
+          transactions = data.map(t => ({ admin: 0, waktu: '', ...t }));
           alert('Cadangan lama berhasil dimuat: ' + transactions.length + ' transaksi. Silakan atur Saldo Awal secara manual.');
         } else if(data && Array.isArray(data.transactions)){
-          transactions = data.transactions.map(t => ({ admin: 0, ...t }));
+          transactions = data.transactions.map(t => ({ admin: 0, waktu: '', ...t }));
           saldoAwal = Number(data.saldoAwal || 0);
           document.getElementById('fSaldoAwal').value = saldoAwal;
           alert('Cadangan berhasil dimuat: ' + transactions.length + ' transaksi.');
