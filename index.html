@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Kas — Agen BRILink</title>
+<style>
+  :root{
+    --navy: #0B2545;
+    --navy-2: #123061;
+    --paper: #F3EFE6;
+    --paper-2: #EAE3D3;
+    --gold: #B8842E;
+    --gold-2: #D9A94E;
+    --ink: #1B1A17;
+    --ink-soft: #5A574C;
+    --line: #D8CFB8;
+    --green: #2F6F4E;
+    --red: #A23B3B;
+    --white: #FFFDF8;
+    --radius: 4px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Public Sans', 'Segoe UI', Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  @font-face{
+    font-family:'Public Sans';
+    src:local('Segoe UI');
+  }
+  .tabnum{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
+
+  header.masthead{
+    background: var(--navy);
+    color: var(--white);
+    padding: 22px 28px 20px;
+    border-bottom: 6px solid var(--gold);
+    position: relative;
+  }
+  header.masthead::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:-2px; height:2px;
+    background: repeating-linear-gradient(90deg, var(--gold-2) 0 10px, transparent 10px 20px);
+    opacity:.6;
+  }
+  .masthead-inner{
+    max-width:1180px; margin:0 auto; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  }
+  .brand-eyebrow{
+    letter-spacing:.16em; text-transform:uppercase; font-size:11px; color:var(--gold-2); font-weight:600; margin-bottom:6px;
+  }
+  h1.brand{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 30px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.01em;
+  }
+  .brand small{
+    display:block; font-family:'Public Sans', Arial, sans-serif; font-weight:400; font-size:13px; color:#C9D3E0; margin-top:4px; letter-spacing:.02em;
+  }
+  .datebox{
+    text-align:right; font-size:13px; color:#C9D3E0;
+  }
+  .datebox .today{ font-size:20px; font-weight:700; color:var(--white); font-family:Georgia, serif;}
+
+  main{ max-width:1180px; margin:0 auto; padding:26px 28px 60px; }
+
+  .summary-row{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:14px; margin-bottom:26px;
+  }
+  .sum-card{
+    background:var(--white); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px; position:relative; overflow:hidden;
+  }
+  .sum-card::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--gold);
+  }
+  .sum-card .label{ font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--ink-soft); margin-bottom:6px; }
+  .sum-card .value{ font-size:22px; font-weight:700; color:var(--navy); font-family:Georgia, serif; }
+  .sum-card .value.small{ font-size:19px; }
+  .sum-card.debit::before{ background:var(--green); }
+  .sum-card.credit::before{ background:var(--red); }
+  .sum-card.balance::before{ background:var(--navy); }
+  .sum-card.balance .value{ color:var(--navy); font-size:23px; }
+
+  .panel{
+    background:var(--white); border:1px solid var(--line); border-radius:var(--radius); margin-bottom:22px;
+  }
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:10px;
+  }
+  .panel-head h2{
+    font-family:Georgia, serif; font-size:16px; margin:0; color:var(--navy); display:flex; align-items:center; gap:8px;
+  }
+  .panel-head h2 .num{ color:var(--gold); font-style:italic;}
+  .panel-body{ padding:18px; }
+
+  .saldo-awal-row{ display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+  .saldo-awal-row .field{ min-width:220px; }
+  .saldo-awal-row .hint{ font-size:12px; color:var(--ink-soft); margin-top:8px; flex-basis:100%; }
+
+  form#txForm{
+    display:grid; grid-template-columns: repeat(6, 1fr); gap:12px 14px;
+  }
+  form#txForm .field-tanggal{grid-column:span 2;}
+  form#txForm .field-nasabah{grid-column:span 2;}
+  form#txForm .field-jenis{grid-column:span 2;}
+  form#txForm .field-nominal{grid-column:span 2;}
+  form#txForm .field-fee{grid-column:span 2;}
+  form#txForm .field-admin{grid-column:span 2;}
+  form#txForm .field-ket{grid-column:span 6;}
+  form#txForm .field-actions{grid-column:span 6; display:flex; gap:10px; justify-content:flex-end; border-top:1px dashed var(--line); padding-top:14px; margin-top:2px;}
+
+  label{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-bottom:5px; font-weight:600; }
+  input, select{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:3px; background:var(--paper); font-size:14px; color:var(--ink);
+    font-family:inherit;
+  }
+  input:focus, select:focus{ outline:2px solid var(--gold-2); outline-offset:1px; border-color:var(--gold); background:var(--white); }
+
+  button{ cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; border-radius:3px; border:1px solid transparent; padding:10px 18px; letter-spacing:.02em; }
+  button:focus-visible{ outline:2px solid var(--gold-2); outline-offset:2px; }
+  .btn-primary{ background:var(--navy); color:var(--white); }
+  .btn-primary:hover{ background:var(--navy-2); }
+  .btn-ghost{ background:transparent; color:var(--navy); border-color:var(--line); }
+  .btn-ghost:hover{ background:var(--paper-2); }
+  .btn-danger{ background:transparent; color:var(--red); border-color:var(--red); }
+  .btn-danger:hover{ background:#fbecec; }
+  .btn-sm{ padding:6px 10px; font-size:12px; }
+
+  .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .toolbar .field{ min-width:150px; }
+  .toolbar .field.grow{ flex:1; min-width:200px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);
+    padding:10px 10px; border-bottom:2px solid var(--navy); background:var(--paper-2); white-space:nowrap;
+  }
+  tbody td{ padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tbody tr:hover{ background:#FBF8F1; }
+  tbody tr:last-child td{ border-bottom:none; }
+  .num-col{ text-align:right; }
+  .jenis-pill{
+    display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap;
+  }
+  .jenis-setor{ background:#E4F1E9; color:var(--green); }
+  .jenis-tarik{ background:#F5E7E7; color:var(--red); }
+  .jenis-transfer{ background:#E6ECF6; color:var(--navy); }
+  .jenis-bayar{ background:#F6EFDD; color:var(--gold); }
+  .jenis-pulsa{ background:#EFE7F5; color:#6C4A8A; }
+  .jenis-lain{ background:#EDEDED; color:#555; }
+
+  .row-actions{ display:flex; gap:6px; }
+  .empty-state{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
+  .empty-state .glyph{ font-size:34px; margin-bottom:10px; color:var(--gold); font-family:Georgia,serif; }
+
+  .table-scroll{ overflow-x:auto; }
+
+  .note-box{
+    background:var(--paper-2); border:1px dashed var(--line); border-radius:3px; padding:10px 12px; font-size:12px; color:var(--ink-soft); margin-top:14px;
+  }
+
+  footer.foot{
+    max-width:1180px; margin:0 auto; padding:0 28px 40px; color:var(--ink-soft); font-size:12px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .file-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  #fileInput{ display:none; }
+
+  @media (max-width: 880px){
+    form#txForm{ grid-template-columns:repeat(2,1fr); }
+    form#txForm .field-tanggal, form#txForm .field-nasabah, form#txForm .field-jenis,
+    form#txForm .field-nominal, form#txForm .field-fee, form#txForm .field-admin, form#txForm .field-ket{ grid-column:span 2; }
+    form#txForm .field-actions{ grid-column:span 2; }
+    .masthead-inner{ align-items:flex-start; }
+  }
+  @media print{
+    header.masthead, .panel-head button, #txForm, .toolbar, footer.foot, .row-actions, #panelSaldoAwal{ display:none !important; }
+    body{ background:white; }
+    .panel{ border:none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="brand-eyebrow">Buku Kas Digital</div>
+      <h1 class="brand">Agen BRILink Pasanggrahan
+        <small>Pencatatan transaksi harian — setor, tarik, transfer, pembayaran & transaksi lainnya</small>
+      </h1>
+    </div>
+    <div class="datebox">
+      <div>Hari ini</div>
+      <div class="today" id="todayLabel">—</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="summary-row" id="summaryRow" aria-label="Ringkasan transaksi">
+    <div class="sum-card">
+      <div class="label">Total Transaksi</div>
+      <div class="value tabnum" id="sumCount">0</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Total Nominal</div>
+      <div class="value small tabnum" id="sumNominal">Rp 0</div>
+    </div>
+    <div class="sum-card credit">
+      <div class="label">Total Admin (Potongan Bank)</div>
+      <div class="value small tabnum" id="sumAdmin">Rp 0</div>
+    </div>
+    <div class="sum-card debit">
+      <div class="label">Total Komisi / Fee</div>
+      <div class="value small tabnum" id="sumFee">Rp 0</div>
+    </div>
+    <div class="sum-card balance">
+      <div class="label">Saldo Saat Ini</div>
+      <div class="value tabnum" id="sumSaldo">Rp 0</div>
+    </div>
+    <div class="sum-card">
+      <div class="label">Rata-rata per Transaksi</div>
+      <div class="value small tabnum" id="sumAvg">Rp 0</div>
+    </div>
+  </section>
+
+  <section class="panel" id="panelSaldoAwal">
+    <div class="panel-head">
+      <h2><span class="num">00</span> Saldo Awal Agen</h2>
+    </div>
+    <div class="panel-body">
+      <div class="saldo-awal-row">
+        <div class="field">
+          <label for="fSaldoAwal">Saldo Awal (Rp)</label>
+          <input type="number" id="fSaldoAwal" min="0" step="1000" value="0">
+        </div>
+        <button class="btn-primary btn-sm" id="btnSimpanSaldoAwal">Terapkan Saldo Awal</button>
+        <div class="hint">
+          Saldo berjalan dihitung dari saldo awal ini, dikurangi nominal + admin setiap transaksi
+          <strong>selain Tarik Tunai</strong>. Untuk Tarik Tunai, saldo agen bertambah sebesar nominal
+          (dikurangi admin jika ada), karena dana berpindah dari rekening nasabah ke saldo agen.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2><span class="num">01</span> Catat Transaksi Baru</h2>
+    </div>
+    <div class="panel-body">
+      <form id="txForm">
+        <div class="field-tanggal">
+          <label for="fTanggal">Tanggal</label>
+          <input type="date" id="fTanggal" required>
+        </div>
+        <div class="field-nasabah">
+          <label for="fNasabah">Nama Nasabah</label>
+          <input type="text" id="fNasabah" placeholder="cth. Budi Santoso" required>
+        </div>
+        <div class="field-jenis">
+          <label for="fJenis">Jenis Transaksi</label>
+          <select id="fJenis" required>
+            <option value="Setor Tunai">Setor Tunai</option>
+            <option value="Tarik Tunai">Tarik Tunai</option>
+            <option value="Transfer">Transfer Antar Bank</option>
+            <option value="Pembayaran">Pembayaran (Listrik/PDAM/dll)</option>
+            <option value="Pulsa/Token">Pembelian Pulsa/Token</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="field-nominal">
+          <label for="fNominal">Nominal Transaksi (Rp)</label>
+          <input type="number" id="fNominal" min="0" step="500" placeholder="0" required>
+        </div>
+        <div class="field-fee">
+          <label for="fFee">Komisi / Fee (Rp)</label>
+          <input type="number" id="fFee" min="0" step="500" placeholder="0">
+        </div>
+        <div class="field-admin">
+          <label for="fAdmin">Biaya Admin Bank (Rp)</label>
+          <input type="number" id="fAdmin" min="0" step="500" placeholder="0">
+        </div>
+        <div class="field-ket">
+          <label for="fKet">Keterangan (opsional)</label>
+          <input type="text" id="fKet" placeholder="cth. No. HP / No. Rekening tujuan">
+        </div>
+        <div class="field-actions">
+          <button type="button" class="btn-ghost" id="resetFormBtn">Bersihkan Form</button>
+          <button type="submit" class="btn-primary" id="submitBtn">Simpan Transaksi</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2><span class="num">02</span> Riwayat Transaksi</h2>
+    </div>
+    <div class="panel-body">
+      <div class="toolbar" style="margin-bottom:16px;">
+        <div class="field grow">
+          <label for="searchInput">Cari nama nasabah / keterangan</label>
+          <input type="text" id="searchInput" placeholder="Ketik untuk mencari...">
+        </div>
+        <div class="field">
+          <label for="filterJenis">Jenis</label>
+          <select id="filterJenis">
+            <option value="">Semua Jenis</option>
+            <option value="Setor Tunai">Setor Tunai</option>
+            <option value="Tarik Tunai">Tarik Tunai</option>
+            <option value="Transfer">Transfer</option>
+            <option value="Pembayaran">Pembayaran</option>
+            <option value="Pulsa/Token">Pulsa/Token</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filterDari">Dari tanggal</label>
+          <input type="date" id="filterDari">
+        </div>
+        <div class="field">
+          <label for="filterSampai">Sampai tanggal</label>
+          <input type="date" id="filterSampai">
+        </div>
+        <button class="btn-ghost btn-sm" id="clearFilterBtn" style="height:38px;">Reset Filter</button>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Nasabah</th>
+              <th>Jenis</th>
+              <th>Keterangan</th>
+              <th class="num-col">Nominal</th>
+              <th class="num-col">Admin</th>
+              <th class="num-col">Fee</th>
+              <th class="num-col">Saldo</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="txTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="glyph">—</div>
+        <div>Belum ada transaksi yang cocok. Catat transaksi baru di atas.</div>
+      </div>
+      <div class="note-box">
+        Kolom "Saldo" adalah saldo berjalan agen dihitung berurutan berdasarkan tanggal transaksi (bukan
+        urutan tampilan), dimulai dari Saldo Awal di panel 00. Mengubah Saldo Awal atau mengedit transaksi
+        lama akan menghitung ulang seluruh saldo berjalan secara otomatis.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div>
+    Data tersimpan sementara di sesi ini saja. Unduh cadangan secara berkala agar data tidak hilang saat halaman ditutup.
+  </div>
+  <div class="file-actions">
+    <button class="btn-ghost btn-sm" id="exportCsvBtn">Ekspor CSV</button>
+    <button class="btn-ghost btn-sm" id="exportJsonBtn">Unduh Cadangan (JSON)</button>
+    <button class="btn-ghost btn-sm" id="importJsonBtn">Muat Cadangan</button>
+    <button class="btn-ghost btn-sm" id="printBtn">Cetak</button>
+    <input type="file" id="fileInput" accept="application/json">
+  </div>
+</footer>
+
+<script>
+(function(){
+  let transactions = [];
+  let editingId = null;
+  let saldoAwal = 0;
+
+  const fmtRupiah = (n) => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+  const fmtTanggal = (iso) => {
+    if(!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+  };
+  const jenisClass = {
+    'Setor Tunai':'jenis-setor', 'Tarik Tunai':'jenis-tarik', 'Transfer':'jenis-transfer',
+    'Pembayaran':'jenis-bayar', 'Pulsa/Token':'jenis-pulsa', 'Lainnya':'jenis-lain'
+  };
+
+  const todayLabel = document.getElementById('todayLabel');
+  const today = new Date();
+  todayLabel.textContent = today.toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  document.getElementById('fTanggal').valueAsDate = today;
+
+  const form = document.getElementById('txForm');
+  const tbody = document.getElementById('txTableBody');
+  const emptyState = document.getElementById('emptyState');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function uid(){ return 't' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+  // Menghitung saldo berjalan untuk SELURUH transaksi (bukan hasil filter),
+  // diurutkan berdasarkan tanggal lalu waktu input, agar saldo konsisten
+  // walau tabel ditampilkan dalam urutan lain atau sedang difilter.
+  function computeBalances(){
+    const sorted = [...transactions].sort((a,b) => a.tanggal.localeCompare(b.tanggal) || a.createdAt - b.createdAt);
+    let saldo = Number(saldoAwal||0);
+    const map = {};
+    for(const t of sorted){
+      const nominal = Number(t.nominal||0);
+      const admin = Number(t.admin||0);
+      if(t.jenis === 'Tarik Tunai'){
+        saldo = saldo + nominal - admin;
+      } else {
+        saldo = saldo - nominal - admin;
+      }
+      map[t.id] = saldo;
+    }
+    return { map, finalSaldo: saldo };
+  }
+
+  function getFiltered(){
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const jenis = document.getElementById('filterJenis').value;
+    const dari = document.getElementById('filterDari').value;
+    const sampai = document.getElementById('filterSampai').value;
+    return transactions.filter(t => {
+      if(q && !(t.nasabah.toLowerCase().includes(q) || (t.keterangan||'').toLowerCase().includes(q))) return false;
+      if(jenis && t.jenis !== jenis) return false;
+      if(dari && t.tanggal < dari) return false;
+      if(sampai && t.tanggal > sampai) return false;
+      return true;
+    }).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.createdAt - a.createdAt);
+  }
+
+  function totalFeeBulanIni(){
+    const now = new Date();
+    const ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    return transactions
+      .filter(t => t.tanggal && t.tanggal.startsWith(ym))
+      .reduce((s,t) => s + Number(t.fee||0), 0);
+  }
+
+  function render(){
+    const list = getFiltered();
+    const { map: saldoMap, finalSaldo } = computeBalances();
+    tbody.innerHTML = '';
+    if(list.length === 0){
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+      for(const t of list){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="tabnum">${fmtTanggal(t.tanggal)}</td>
+          <td>${escapeHtml(t.nasabah)}</td>
+          <td><span class="jenis-pill ${jenisClass[t.jenis]||'jenis-lain'}">${escapeHtml(t.jenis)}</span></td>
+          <td>${escapeHtml(t.keterangan||'—')}</td>
+          <td class="num-col tabnum">${fmtRupiah(t.nominal)}</td>
+          <td class="num-col tabnum">${fmtRupiah(t.admin)}</td>
+          <td class="num-col tabnum">${fmtRupiah(t.fee)}</td>
+          <td class="num-col tabnum">${fmtRupiah(saldoMap[t.id])}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn-ghost btn-sm" data-edit="${t.id}">Ubah</button>
+              <button class="btn-danger btn-sm" data-del="${t.id}">Hapus</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+    renderSummary(list, finalSaldo);
+  }
+
+  function renderSummary(list, finalSaldo){
+    const count = list.length;
+    const totalNominal = list.reduce((s,t) => s + Number(t.nominal||0), 0);
+    const totalFee = list.reduce((s,t) => s + Number(t.fee||0), 0);
+    const totalAdmin = list.reduce((s,t) => s + Number(t.admin||0), 0);
+    const avg = count ? totalNominal / count : 0;
+    document.getElementById('sumCount').textContent = count;
+    document.getElementById('sumNominal').textContent = fmtRupiah(totalNominal);
+    document.getElementById('sumAdmin').textContent = fmtRupiah(totalAdmin);
+    document.getElementById('sumFee').textContent = fmtRupiah(totalFee);
+    document.getElementById('sumSaldo').textContent = fmtRupiah(finalSaldo);
+    document.getElementById('sumAvg').textContent = fmtRupiah(Math.round(avg));
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById('btnSimpanSaldoAwal').addEventListener('click', function(){
+    const v = Number(document.getElementById('fSaldoAwal').value || 0);
+    saldoAwal = v;
+    render();
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const data = {
+      tanggal: document.getElementById('fTanggal').value,
+      nasabah: document.getElementById('fNasabah').value.trim(),
+      jenis: document.getElementById('fJenis').value,
+      nominal: Number(document.getElementById('fNominal').value || 0),
+      fee: Number(document.getElementById('fFee').value || 0),
+      admin: Number(document.getElementById('fAdmin').value || 0),
+      keterangan: document.getElementById('fKet').value.trim()
+    };
+    if(!data.nasabah || !data.tanggal){ return; }
+
+    if(editingId){
+      const idx = transactions.findIndex(t => t.id === editingId);
+      if(idx > -1){ transactions[idx] = { ...transactions[idx], ...data }; }
+      editingId = null;
+      submitBtn.textContent = 'Simpan Transaksi';
+    } else {
+      transactions.push({ id: uid(), createdAt: Date.now(), ...data });
+    }
+    form.reset();
+    document.getElementById('fTanggal').valueAsDate = new Date();
+    render();
+  });
+
+  document.getElementById('resetFormBtn').addEventListener('click', function(){
+    form.reset();
+    document.getElementById('fTanggal').valueAsDate = new Date();
+    editingId = null;
+    submitBtn.textContent = 'Simpan Transaksi';
+  });
+
+  tbody.addEventListener('click', function(e){
+    const editId = e.target.getAttribute('data-edit');
+    const delId = e.target.getAttribute('data-del');
+    if(editId){
+      const t = transactions.find(x => x.id === editId);
+      if(!t) return;
+      document.getElementById('fTanggal').value = t.tanggal;
+      document.getElementById('fNasabah').value = t.nasabah;
+      document.getElementById('fJenis').value = t.jenis;
+      document.getElementById('fNominal').value = t.nominal;
+      document.getElementById('fFee').value = t.fee;
+      document.getElementById('fAdmin').value = t.admin || 0;
+      document.getElementById('fKet').value = t.keterangan || '';
+      editingId = editId;
+      submitBtn.textContent = 'Perbarui Transaksi';
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+    if(delId){
+      if(confirm('Hapus transaksi ini?')){
+        transactions = transactions.filter(t => t.id !== delId);
+        render();
+      }
+    }
+  });
+
+  ['searchInput','filterJenis','filterDari','filterSampai'].forEach(id => {
+    document.getElementById(id).addEventListener('input', render);
+    document.getElementById(id).addEventListener('change', render);
+  });
+  document.getElementById('clearFilterBtn').addEventListener('click', function(){
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterJenis').value = '';
+    document.getElementById('filterDari').value = '';
+    document.getElementById('filterSampai').value = '';
+    render();
+  });
+
+  document.getElementById('exportCsvBtn').addEventListener('click', function(){
+    const list = getFiltered();
+    if(list.length === 0){ alert('Tidak ada data untuk diekspor.'); return; }
+    const { map: saldoMap } = computeBalances();
+    const header = ['Tanggal','Nasabah','Jenis','Keterangan','Nominal','Admin','Fee','Saldo'];
+    const rows = list.map(t => [t.tanggal, t.nasabah, t.jenis, (t.keterangan||''), t.nominal, (t.admin||0), t.fee, saldoMap[t.id]]);
+    const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, `transaksi-brilink-${new Date().toISOString().slice(0,10)}.csv`);
+  });
+
+  document.getElementById('exportJsonBtn').addEventListener('click', function(){
+    const payload = { saldoAwal, transactions };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    downloadBlob(blob, `cadangan-transaksi-brilink-${new Date().toISOString().slice(0,10)}.json`);
+  });
+
+  document.getElementById('importJsonBtn').addEventListener('click', function(){
+    document.getElementById('fileInput').click();
+  });
+  document.getElementById('fileInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      try{
+        const data = JSON.parse(ev.target.result);
+        // Kompatibel dengan cadangan lama (array transaksi tanpa saldoAwal)
+        // maupun format baru { saldoAwal, transactions }.
+        if(Array.isArray(data)){
+          transactions = data.map(t => ({ admin: 0, ...t }));
+          alert('Cadangan lama berhasil dimuat: ' + transactions.length + ' transaksi. Silakan atur Saldo Awal secara manual.');
+        } else if(data && Array.isArray(data.transactions)){
+          transactions = data.transactions.map(t => ({ admin: 0, ...t }));
+          saldoAwal = Number(data.saldoAwal || 0);
+          document.getElementById('fSaldoAwal').value = saldoAwal;
+          alert('Cadangan berhasil dimuat: ' + transactions.length + ' transaksi.');
+        } else {
+          alert('Format file tidak valid.');
+          return;
+        }
+        render();
+      } catch(err){
+        alert('Gagal membaca file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
+
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>
